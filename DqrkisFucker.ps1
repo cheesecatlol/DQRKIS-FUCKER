@@ -1,6 +1,6 @@
 # ============================================================
-#   DQRKIS FUCKER 
-#  Cheese & Nic
+#   DQRKIS FUCKER  -  Cheat Client Detector
+#   Scans .jar files for known Dqrkis client signatures
 # ============================================================
 #   discord : cheese_cat0
 #   discord : mecz.exe
