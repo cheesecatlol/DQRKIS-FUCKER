@@ -157,14 +157,6 @@ if ($instances.Count -eq 0) {
     $instances = @([PSCustomObject]@{ Name = "Custom"; Path = $scanPath })
 }
 
-Write-Host "  instances" -ForegroundColor DarkGray
-foreach ($inst in $instances) {
-    $c = (Get-ChildItem -Path $inst.Path -Filter "*.jar" -ErrorAction SilentlyContinue).Count
-    Write-Host "    · " -NoNewline -ForegroundColor DarkGray
-    Write-Host $inst.Name -NoNewline -ForegroundColor Gray
-    Write-Host "  $c files" -ForegroundColor DarkGray
-}
-Write-Host ""
 Write-Host "  scanning..." -ForegroundColor DarkGray
 Write-Host "  " -NoNewline
 
@@ -221,8 +213,6 @@ Write-Banner
 
 $hasFlagged = $totalFlagged -gt 0
 
-Write-Host "  instances " -NoNewline -ForegroundColor DarkGray
-Write-Host "$($instances.Count)" -ForegroundColor White
 Write-Host "  scanned   " -NoNewline -ForegroundColor DarkGray
 Write-Host "$($allJars.Count) files  ($totalSize MB)" -ForegroundColor White
 Write-Host "  clean     " -NoNewline -ForegroundColor DarkGray
@@ -241,9 +231,6 @@ if ($hasFlagged) {
         $idx++
         Write-Host "  [$idx]" -ForegroundColor Red -NoNewline
         Write-Host " $($mod.Name)" -ForegroundColor White
-
-        Write-Host "      instance  " -NoNewline -ForegroundColor DarkGray
-        Write-Host $mod.Instance -ForegroundColor Gray
 
         Write-Host "      path      " -NoNewline -ForegroundColor DarkGray
         $dispPath = $mod.Path
