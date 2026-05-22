@@ -139,7 +139,7 @@ $TargetStrings = @(
     # Crystal / obi / farming automation
     "PLACE_OBI","WAIT_OBI","PLACE_CRYSTAL","BREAK_CRYSTAL",
     "ROTATING_DOWN","THROWING","ROTATING_BACK","REFILLING",
-    "PLANTING","BONEMEALING","MINING",
+    "PLANTING","BONEMEALING",
 
     # Internal class / obfuscation signatures
     "ParseJ.a","CacheE.MISC","CacheE.RENDER","CacheE.CT",
@@ -163,7 +163,7 @@ $TargetStringsClean = @(
     "TARGET_ORDERS","ORDERS_SELECT","ORDERS_EXIT","ORDERS_CONFIRM","ORDERS_FINAL_EXIT","CYCLE_PAUSE",
     "PLACE_OBI","WAIT_OBI","PLACE_CRYSTAL","BREAK_CRYSTAL",
     "ROTATING_DOWN","THROWING","ROTATING_BACK","REFILLING",
-    "PLANTING","BONEMEALING","MINING",
+    "PLANTING","BONEMEALING",
     "ParseJ.a","CacheE.MISC","CacheE.RENDER","CacheE.CT",
     "CoreH","cn`$MacroState","co`$State"
 )
@@ -259,7 +259,7 @@ if ($jarFiles.Count -eq 0) {
 Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
 Write-Host "  Found " -NoNewline -ForegroundColor DarkGray
 Write-Host "$($jarFiles.Count)" -NoNewline -ForegroundColor White
-Write-Host " jar file(s) — the cheese is melting... scanning!" -ForegroundColor DarkGray
+Write-Host " jar file(s) — starting deep scan..." -ForegroundColor DarkGray
 Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
 Write-Host ""
 
@@ -334,22 +334,7 @@ if ($flaggedMods.Count -gt 0) {
     }
 }
 
-# --- CLEAN ---
-if ($cleanMods.Count -gt 0) {
-    Write-Host ""
-    Write-Host ("  " + "~" * 64) -ForegroundColor DarkGreen
-    Write-Host "  " -NoNewline
-    Write-Host " o " -ForegroundColor Black -BackgroundColor DarkGreen -NoNewline
-    Write-Host "  CLEAN MODS  ($($cleanMods.Count))" -ForegroundColor Green
-    Write-Host ("  " + "~" * 64) -ForegroundColor DarkGreen
-    Write-Host ""
-    foreach ($c in $cleanMods) {
-        Write-Host "  " -NoNewline
-        Write-Host "✓ " -NoNewline -ForegroundColor Green
-        Write-Host $c -ForegroundColor DarkGray
-    }
-    Write-Host ""
-}
+
 
 # --- ERRORS ---
 if ($errorMods.Count -gt 0) {
@@ -391,7 +376,7 @@ Write-Host ""
 
 if ($flaggedMods.Count -gt 0) {
     Write-Host "  " -NoNewline
-    Write-Host " !! CHEAT STRINGS DETECTED — check the flagged mods above !! " -ForegroundColor White -BackgroundColor DarkRed
+    Write-Host " dqrkis fucked " -ForegroundColor White -BackgroundColor DarkRed
 } else {
     Write-Host "  " -NoNewline
     Write-Host " No target strings found. Mods look cheesy clean! " -ForegroundColor Black -BackgroundColor DarkGreen
