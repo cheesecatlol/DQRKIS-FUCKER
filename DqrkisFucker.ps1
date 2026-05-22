@@ -43,38 +43,60 @@ function Write-Banner {
     Clear-Host
     Start-Sleep -Milliseconds 100
 
-    $L1  = "  ██████╗  ██████╗ ██████╗ ██╗  ██╗██╗███████╗"
-    $L2  = "  ██╔══██╗██╔═══██╗██╔══██╗██║ ██╔╝██║██╔════╝"
-    $L3  = "  ██║  ██║██║   ██║██████╔╝█████╔╝ ██║███████╗"
-    $L4  = "  ██║  ██║██║▄▄ ██║██╔══██╗██╔═██╗ ██║╚════██║"
-    $L5  = "  ██████╔╝╚██████╔╝██║  ██║██║  ██╗██║███████║"
-    $L6  = "  ╚═════╝  ╚══▀▀═╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝"
+    # CHEESY
+    $L1  = "  ██████╗██╗  ██╗███████╗███████╗███████╗██╗   ██╗"
+    $L2  = " ██╔════╝██║  ██║██╔════╝██╔════╝██╔════╝╚██╗ ██╔╝"
+    $L3  = " ██║     ███████║█████╗  █████╗  ███████╗ ╚████╔╝ "
+    $L4  = " ██║     ██╔══██║██╔══╝  ██╔══╝  ╚════██║  ╚██╔╝  "
+    $L5  = " ╚██████╗██║  ██║███████╗███████╗███████║   ██║   "
+    $L6  = "  ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝   ╚═╝   "
 
-    $L7  = "  ███████╗██╗   ██╗ ██████╗██╗  ██╗███████╗██████╗ "
-    $L8  = "  ██╔════╝██║   ██║██╔════╝██║ ██╔╝██╔════╝██╔══██╗"
-    $L9  = "  █████╗  ██║   ██║██║     █████╔╝ █████╗  ██████╔╝"
-    $L10 = "  ██╔══╝  ██║   ██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗"
-    $L11 = "  ██║     ╚██████╔╝╚██████╗██║  ██╗███████╗██║  ██║"
-    $L12 = "  ╚═╝      ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝"
+    # DQRKIS FUCKER
+    $L7  = "  ██████╗  ██████╗ ██████╗ ██╗  ██╗██╗███████╗"
+    $L8  = "  ██╔══██╗██╔═══██╗██╔══██╗██║ ██╔╝██║██╔════╝"
+    $L9  = "  ██║  ██║██║   ██║██████╔╝█████╔╝ ██║███████╗"
+    $L10 = "  ██║  ██║██║▄▄ ██║██╔══██╗██╔═██╗ ██║╚════██║"
+    $L11 = "  ██████╔╝╚██████╔╝██║  ██║██║  ██╗██║███████║"
+    $L12 = "  ╚═════╝  ╚══▀▀═╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝"
 
-    Write-Animated -Lines @($L1,$L2,$L3,$L4,$L5,$L6) -Color Red -DelayMs 20
+    $L13 = "  ███████╗██╗   ██╗ ██████╗██╗  ██╗███████╗██████╗ "
+    $L14 = "  ██╔════╝██║   ██║██╔════╝██║ ██╔╝██╔════╝██╔══██╗"
+    $L15 = "  █████╗  ██║   ██║██║     █████╔╝ █████╗  ██████╔╝"
+    $L16 = "  ██╔══╝  ██║   ██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗"
+    $L17 = "  ██║     ╚██████╔╝╚██████╗██║  ██╗███████╗██║  ██║"
+    $L18 = "  ╚═╝      ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝"
+
+    $cheese = @(
+        "                        .::::. ",
+        "                      .:  o   :.",
+        "                     :  o   o  :",
+        "                    :___________:"
+    )
+
+    Write-Animated -Lines @($L1,$L2,$L3,$L4,$L5,$L6) -Color Yellow -DelayMs 18
     Write-Host ""
-    Write-Animated -Lines @($L7,$L8,$L9,$L10,$L11,$L12) -Color DarkRed -DelayMs 20
+    Write-Animated -Lines @($L7,$L8,$L9,$L10,$L11,$L12) -Color Red -DelayMs 18
     Write-Host ""
-
+    Write-Animated -Lines @($L13,$L14,$L15,$L16,$L17,$L18) -Color DarkRed -DelayMs 18
+    Write-Host ""
+    foreach ($line in $cheese) {
+        Write-Host $line -ForegroundColor Yellow
+        Start-Sleep -Milliseconds 30
+    }
+    Write-Host ""
     Write-Host "  " -NoNewline
-    Write-Host "  x X x X x  [ dqrkis fucker v1.0 ]  x X x X x  " -ForegroundColor DarkRed
+    Write-Host "  o O o O o  [ CheesyDqrkisFucker v1.0 — by cheese cat ]  o O o O o  " -ForegroundColor DarkYellow
     Write-Host ""
-    Write-Host ("  " + "~" * 64) -ForegroundColor DarkRed
+    Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
     Write-Host ""
 }
 
 function Write-SectionHeader {
-    param([string]$Title, [ConsoleColor]$Color = "Red")
+    param([string]$Title, [ConsoleColor]$Color = "Yellow")
     Write-Host ""
-    Write-Host ("  " + "~" * 64) -ForegroundColor DarkRed
+    Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
     Write-Host "  $Title" -ForegroundColor $Color
-    Write-Host ("  " + "~" * 64) -ForegroundColor DarkRed
+    Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
     Write-Host ""
 }
 
@@ -85,7 +107,7 @@ function Write-ProgressBar {
     $filled = [Math]::Round(($Current / $Total) * 40)
     $empty  = 40 - $filled
     $bar    = ("█" * $filled) + ("░" * $empty)
-    Write-Host "`r  [$bar] $pct%  $Label          " -NoNewline -ForegroundColor Red
+    Write-Host "`r  [$bar] $pct%  $Label          " -NoNewline -ForegroundColor Yellow
 }
 
 # ================================================================
@@ -105,10 +127,10 @@ $TargetStrings = @(
     "mace_swap","quick_strike","loot_yeeter","auto_jump_reset","macro_198",
     "stun_slam","safe_anchor","double_anchor","auto_pot_refill","totem_offhand",
     "walksy_optimizer","key_pearl","aim_assist","auto_neth_pot","auto_dtap",
-    "bottle_throw","trigger_bot","nametags","auto_web",
+    "bottle_throw","trigger_bot","auto_web",
 
     # Shop macro states
-    "SHOP","SHOP_END","SHOP_ITEM","SHOP_GLASS_PANE","SHOP_BUY",
+    "SHOP_END","SHOP_ITEM","SHOP_GLASS_PANE","SHOP_BUY",
     "SHOP_CONFIRM","SHOP_CHECK_FULL","SHOP_EXIT",
 
     # Order macro states
@@ -135,15 +157,15 @@ $TargetStringsClean = @(
     "mace_swap","quick_strike","loot_yeeter","auto_jump_reset","macro_198",
     "stun_slam","safe_anchor","double_anchor","auto_pot_refill","totem_offhand",
     "walksy_optimizer","key_pearl","aim_assist","auto_neth_pot","auto_dtap",
-    "bottle_throw","trigger_bot","nametags","auto_web",
-    "SHOP","SHOP_END","SHOP_ITEM","SHOP_GLASS_PANE","SHOP_BUY",
+    "bottle_throw","trigger_bot","auto_web",
+    "SHOP_END","SHOP_ITEM","SHOP_GLASS_PANE","SHOP_BUY",
     "SHOP_CONFIRM","SHOP_CHECK_FULL","SHOP_EXIT",
     "TARGET_ORDERS","ORDERS_SELECT","ORDERS_EXIT","ORDERS_CONFIRM","ORDERS_FINAL_EXIT","CYCLE_PAUSE",
     "PLACE_OBI","WAIT_OBI","PLACE_CRYSTAL","BREAK_CRYSTAL",
     "ROTATING_DOWN","THROWING","ROTATING_BACK","REFILLING",
     "PLANTING","BONEMEALING","MINING",
     "ParseJ.a","CacheE.MISC","CacheE.RENDER","CacheE.CT",
-    "CheckC","CoreH","cn`$MacroState","co`$State"
+    "CoreH","cn`$MacroState","co`$State"
 )
 
 $ScanExtensions = [System.Collections.Generic.HashSet[string]]::new(
@@ -201,14 +223,14 @@ function Invoke-DeepScan {
 Write-Banner
 
 Write-Host "  " -NoNewline
-Write-Host " ABOUT " -ForegroundColor White -BackgroundColor DarkRed -NoNewline
-Write-Host "  Scans .jar mod files for dqrkis / cheat strings" -ForegroundColor DarkGray
+Write-Host " o " -ForegroundColor Black -BackgroundColor Yellow -NoNewline
+Write-Host "  Scans .jar mod files for dqrkis cheat strings   " -ForegroundColor DarkGray
 Write-Host ""
-Write-Host ("  " + "~" * 64) -ForegroundColor DarkRed
+Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
 Write-Host ""
 
 # --- PATH INPUT ---
-Write-Host "  Enter the path to your mods folder:" -ForegroundColor Red
+Write-Host "  Enter the path to your mods folder:" -ForegroundColor Yellow
 Write-Host "  " -NoNewline
 $modsPath = Read-Host
 
@@ -227,18 +249,18 @@ $jarFiles = @(Get-ChildItem -Path $modsPath -Recurse -Filter "*.jar" -ErrorActio
 
 if ($jarFiles.Count -eq 0) {
     Write-Host "  " -NoNewline
-    Write-Host " WARNING " -ForegroundColor Black -BackgroundColor Yellow -NoNewline
+    Write-Host " o " -ForegroundColor Black -BackgroundColor DarkYellow -NoNewline
     Write-Host "  No .jar files found in: $modsPath" -ForegroundColor Yellow
     Write-Host ""
     Read-Host "  Press Enter to exit"
     exit 0
 }
 
-Write-Host ("  " + "~" * 64) -ForegroundColor DarkRed
+Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
 Write-Host "  Found " -NoNewline -ForegroundColor DarkGray
 Write-Host "$($jarFiles.Count)" -NoNewline -ForegroundColor White
-Write-Host " jar file(s) — starting deep scan..." -ForegroundColor DarkGray
-Write-Host ("  " + "~" * 64) -ForegroundColor DarkRed
+Write-Host " jar file(s) — the cheese is melting... scanning!" -ForegroundColor DarkGray
+Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
 Write-Host ""
 
 # ================================================================
@@ -317,7 +339,7 @@ if ($cleanMods.Count -gt 0) {
     Write-Host ""
     Write-Host ("  " + "~" * 64) -ForegroundColor DarkGreen
     Write-Host "  " -NoNewline
-    Write-Host " OK " -ForegroundColor Black -BackgroundColor DarkGreen -NoNewline
+    Write-Host " o " -ForegroundColor Black -BackgroundColor DarkGreen -NoNewline
     Write-Host "  CLEAN MODS  ($($cleanMods.Count))" -ForegroundColor Green
     Write-Host ("  " + "~" * 64) -ForegroundColor DarkGreen
     Write-Host ""
@@ -334,7 +356,7 @@ if ($errorMods.Count -gt 0) {
     Write-Host ""
     Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
     Write-Host "  " -NoNewline
-    Write-Host " ! " -ForegroundColor Black -BackgroundColor DarkYellow -NoNewline
+    Write-Host " o " -ForegroundColor Black -BackgroundColor DarkYellow -NoNewline
     Write-Host "  UNREADABLE / ERRORED  ($($errorMods.Count))" -ForegroundColor Yellow
     Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
     Write-Host ""
@@ -353,9 +375,9 @@ if ($errorMods.Count -gt 0) {
 $sumSep = "  " + ("~" * 64)
 
 Write-Host ""
-Write-Host $sumSep -ForegroundColor Red
-Write-Host "  SUMMARY" -ForegroundColor Red
-Write-Host $sumSep -ForegroundColor Red
+Write-Host $sumSep -ForegroundColor DarkYellow
+Write-Host "  SUMMARY" -ForegroundColor Yellow
+Write-Host $sumSep -ForegroundColor DarkYellow
 Write-Host ""
 Write-Host "  Total scanned  : " -NoNewline -ForegroundColor DarkGray; Write-Host "$totalScanned" -ForegroundColor White
 Write-Host "  Flagged mods   : " -NoNewline -ForegroundColor DarkGray
@@ -364,7 +386,7 @@ Write-Host "  Clean mods     : " -NoNewline -ForegroundColor DarkGray; Write-Hos
 Write-Host "  Errored        : " -NoNewline -ForegroundColor DarkGray
 if ($errorMods.Count -gt 0) { Write-Host "$($errorMods.Count)" -ForegroundColor Yellow } else { Write-Host "0" -ForegroundColor Green }
 Write-Host ""
-Write-Host $sumSep -ForegroundColor Red
+Write-Host $sumSep -ForegroundColor DarkYellow
 Write-Host ""
 
 if ($flaggedMods.Count -gt 0) {
@@ -372,13 +394,20 @@ if ($flaggedMods.Count -gt 0) {
     Write-Host " !! CHEAT STRINGS DETECTED — check the flagged mods above !! " -ForegroundColor White -BackgroundColor DarkRed
 } else {
     Write-Host "  " -NoNewline
-    Write-Host " No target strings found. Mods look clean. " -ForegroundColor Black -BackgroundColor DarkGreen
+    Write-Host " No target strings found. Mods look cheesy clean! " -ForegroundColor Black -BackgroundColor DarkGreen
 }
 
 Write-Host ""
-Write-Host "  Scan complete. " -NoNewline -ForegroundColor White
-Write-Host "x" -ForegroundColor Red
+Write-Host "  Analysis complete! Thanks for using CheesyDqrkisFucker " -NoNewline -ForegroundColor White
+Write-Host "o" -ForegroundColor Yellow
 Write-Host ""
-Write-Host $sumSep -ForegroundColor DarkRed
+Write-Host "  Created by  : " -NoNewline -ForegroundColor DarkGray
+Write-Host "cheese cat" -ForegroundColor Yellow
+Write-Host "  Discord     : " -NoNewline -ForegroundColor DarkGray
+Write-Host "cheese_cat0" -ForegroundColor Yellow
+Write-Host "  GitHub      : " -NoNewline -ForegroundColor DarkGray
+Write-Host "github.com/cheesecatlol" -ForegroundColor Yellow
+Write-Host ""
+Write-Host $sumSep -ForegroundColor DarkYellow
 Write-Host ""
 Read-Host "  Press Enter to exit"
