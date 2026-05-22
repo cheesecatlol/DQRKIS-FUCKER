@@ -85,7 +85,7 @@ function Write-Banner {
     }
     Write-Host ""
     Write-Host "  " -NoNewline
-    Write-Host "  o O o O o  [ CheesyDqrkisFucker v1.0 — by cheese cat ]  o O o O o  " -ForegroundColor DarkYellow
+    Write-Host "  o O o O o  [ CheesyDqrkisFucker by cheese cat ]  o O o O o  " -ForegroundColor DarkYellow
     Write-Host ""
     Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
     Write-Host ""
@@ -229,10 +229,99 @@ Write-Host ""
 Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
 Write-Host ""
 
-# --- PATH INPUT ---
-Write-Host "  Enter the path to your mods folder:" -ForegroundColor Yellow
-Write-Host "  " -NoNewline
-$modsPath = Read-Host
+# ================================================================
+#  INSTANCE AUTO-DETECTION
+# ================================================================
+
+$procs = Get-Process -Name "java","javaw" -ErrorAction SilentlyContinue
+
+if ($procs) {
+    Write-Host "  >> Minecraft is RUNNING" -ForegroundColor Yellow
+    foreach ($p in $procs) {
+        try {
+            $up = (Get-Date) - $p.StartTime
+            Write-Host "     $($p.Name) (PID $($p.Id))  |  Started: $($p.StartTime.ToString('HH:mm:ss'))  |  Uptime: $([int]$up.TotalHours)h $($up.Minutes)m" -ForegroundColor DarkYellow
+        } catch {}
+    }
+    Write-Host ""
+}
+
+$autoFolder = $null; $autoLabel = $null
+if ($procs) {
+    foreach ($proc in $procs) {
+        try {
+            $wmi = Get-WmiObject Win32_Process -Filter "ProcessId=$($proc.Id)" -ErrorAction SilentlyContinue
+            $cmdLine = if ($wmi) { $wmi.CommandLine } else { "" }
+            if ($cmdLine) {
+                $m = [regex]::Match($cmdLine, '--gameDir\s+"([^"]+)"')
+                if (-not $m.Success) { $m = [regex]::Match($cmdLine, '--gameDir\s+(\S+)') }
+                if ($m.Success) {
+                    $gameDir  = $m.Groups[1].Value.TrimEnd('\')
+                    $candidate = Join-Path $gameDir "mods"
+                    if (Test-Path $candidate) {
+                        $autoFolder = $candidate
+                        $autoLabel  = Split-Path (Split-Path $gameDir -Parent) -Leaf
+                        if ([string]::IsNullOrWhiteSpace($autoLabel) -or $autoLabel -eq "instances") {
+                            $autoLabel = Split-Path $gameDir -Leaf
+                        }
+                    }
+                }
+                if (-not $autoFolder) {
+                    $m2 = [regex]::Match($cmdLine, '-Dminecraft\.appDir=([^\s"]+)')
+                    if ($m2.Success) {
+                        $gameDir   = $m2.Groups[1].Value.Trim('"').TrimEnd('\')
+                        $candidate = Join-Path $gameDir "mods"
+                        if (Test-Path $candidate) { $autoFolder = $candidate; $autoLabel = Split-Path $gameDir -Leaf }
+                    }
+                }
+            }
+        } catch {}
+        if ($autoFolder) { break }
+    }
+}
+
+# ----------------------------------------------------------------
+#  PATH RESOLUTION
+# ----------------------------------------------------------------
+
+if ($autoFolder) {
+    Write-Host "  " -NoNewline
+    Write-Host " ACTIVE INSTANCE DETECTED " -ForegroundColor Black -BackgroundColor Yellow
+    Write-Host ""
+    Write-Host "  " -NoNewline
+    Write-Host " >> " -ForegroundColor Black -BackgroundColor DarkYellow -NoNewline
+    Write-Host "  $autoLabel" -NoNewline -ForegroundColor Yellow
+    Write-Host "  " -NoNewline
+    Write-Host $autoFolder -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  Press " -NoNewline -ForegroundColor DarkGray
+    Write-Host "Enter" -NoNewline -ForegroundColor Yellow
+    Write-Host " to scan this instance, or type a custom path to override:" -ForegroundColor DarkGray
+    Write-Host ""
+    $userInput = Read-Host "  Choice"
+    $modsPath  = if ([string]::IsNullOrWhiteSpace($userInput)) { $autoFolder } else { $userInput.Trim() }
+} else {
+    if ($procs) {
+        Write-Host "  " -NoNewline
+        Write-Host " Minecraft is running but the instance path could not be detected. " -ForegroundColor Black -BackgroundColor DarkYellow
+        Write-Host ""
+    } else {
+        Write-Host "  " -NoNewline
+        Write-Host " Minecraft is not running. " -ForegroundColor Black -BackgroundColor DarkGray
+        Write-Host ""
+    }
+    Write-Host "  Enter the path to your mods folder:" -ForegroundColor Yellow
+    Write-Host ""
+    do {
+        $userInput = Read-Host "  Path"
+        $modsPath  = $userInput.Trim()
+        if ([string]::IsNullOrWhiteSpace($modsPath)) {
+            Write-Host "  " -NoNewline
+            Write-Host " ERROR " -ForegroundColor White -BackgroundColor DarkRed -NoNewline
+            Write-Host "  No path entered. Please enter the full path to your mods folder." -ForegroundColor Red
+        }
+    } while ([string]::IsNullOrWhiteSpace($modsPath))
+}
 
 Write-Host ""
 
@@ -245,7 +334,7 @@ if (-not (Test-Path $modsPath)) {
     exit 1
 }
 
-$jarFiles = @(Get-ChildItem -Path $modsPath -Recurse -Filter "*.jar" -ErrorAction SilentlyContinue)
+$jarFiles = @(Get-ChildItem -Path $modsPath -Filter "*.jar" -ErrorAction SilentlyContinue)
 
 if ($jarFiles.Count -eq 0) {
     Write-Host "  " -NoNewline
@@ -257,9 +346,10 @@ if ($jarFiles.Count -eq 0) {
 }
 
 Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
-Write-Host "  Found " -NoNewline -ForegroundColor DarkGray
-Write-Host "$($jarFiles.Count)" -NoNewline -ForegroundColor White
-Write-Host " jar file(s) — starting deep scan..." -ForegroundColor DarkGray
+Write-Host "  Scanning : " -NoNewline -ForegroundColor DarkGray
+Write-Host $modsPath -ForegroundColor Yellow
+Write-Host "  Found    : " -NoNewline -ForegroundColor DarkGray
+Write-Host "$($jarFiles.Count) jar file(s)" -ForegroundColor White
 Write-Host ("  " + "~" * 64) -ForegroundColor DarkYellow
 Write-Host ""
 
