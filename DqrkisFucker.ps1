@@ -2,289 +2,275 @@
 #   DQRKIS FUCKER  -  Cheat Client Detector
 #   Scans .jar files for known Dqrkis client signatures
 # ============================================================
+#   discord : cheese_cat0
+#   discord : mecz.exe
+#   Special thanks to Nic for helping me
+# ============================================================
 
-$Host.UI.RawUI.WindowTitle = "Dqrkis Fucker - Cheat Scanner"
+Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-# Load compression — try multiple methods for compatibility
-try {
-    Add-Type -AssemblyName "System.IO.Compression"          -ErrorAction Stop
-    Add-Type -AssemblyName "System.IO.Compression.FileSystem" -ErrorAction Stop
-} catch {
-    try {
-        $null = [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression")
-        $null = [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
-    } catch { }
+$Host.UI.RawUI.WindowTitle = "Dqrkis Fucker — Cheat Scanner"
+
+# ── Colour palette ──────────────────────────────────────────
+$C = @{
+    Banner      = 'Red'
+    Accent      = 'Cyan'
+    Dim         = 'DarkGray'
+    OK          = 'Green'
+    Warn        = 'DarkYellow'
+    Bad         = 'Red'
+    BadDim      = 'DarkRed'
+    Hit         = 'Yellow'
+    White       = 'White'
 }
 
-# Bail early if ZipFile still not available
-if (-not ("System.IO.Compression.ZipFile" -as [type])) {
-    Write-Host "[FATAL] Could not load System.IO.Compression. Requires .NET 4.5+ / PowerShell 3+." -ForegroundColor Red
-    Read-Host "Press Enter to exit"
-    exit 1
+# ── Helpers ─────────────────────────────────────────────────
+function Write-Rule {
+    param([string]$Color = $C.Dim, [int]$Width = 82)
+    Write-Host ("  " + ([string][char]0x2500 * $Width)) -ForegroundColor $Color
+}
+
+function Write-Section {
+    param([string]$Title, [string]$Color = $C.Accent)
+    Write-Rule -Color $Color
+    Write-Host "  $Title" -ForegroundColor $Color
+    Write-Rule -Color $Color
 }
 
 function Write-Banner {
     Clear-Host
-    $b = @"
+    Write-Host ""
 
-  ██████╗  ██████╗ ██████╗ ██╗  ██╗██╗███████╗    ███████╗██╗   ██╗ ██████╗██╗  ██╗███████╗██████╗
-  ██╔══██╗██╔═══██╗██╔══██╗██║ ██╔╝██║██╔════╝    ██╔════╝██║   ██║██╔════╝██║ ██╔╝██╔════╝██╔══██╗
-  ██║  ██║██║   ██║██████╔╝█████╔╝ ██║███████╗    █████╗  ██║   ██║██║     █████╔╝ █████╗  ██████╔╝
-  ██║  ██║██║▄▄ ██║██╔══██╗██╔═██╗ ██║╚════██║    ██╔══╝  ██║   ██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
-  ██████╔╝╚██████╔╝██║  ██║██║  ██╗██║███████║    ██║     ╚██████╔╝╚██████╗██║  ██╗███████╗██║  ██║
-  ╚═════╝  ╚══▀▀═╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝      ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+    $lines = @(
+        " /$$$$$$$   /$$$$$$  /$$$$$$$  /$$   /$$ /$$$$$$  /$$$$$$",
+        "| $$__  $$ /$$__  $$| $$__  $$| $$  /$$/|_  $$_/ /$$__  $$",
+        "| $$  \ $$| $$  \ $$| $$  \ $$| $$ /$$/   | $$  | $$  \__/",
+        "| $$  | $$| $$  | $$| $$$$$$$/| $$$$$/    | $$  |  $$$$$$ ",
+        "| $$  | $$| $$  | $$| $$__  $$| $$  $$    | $$   \____  $$",
+        "| $$  | $$| $$  | $$| $$  \ $$| $$\  $$   | $$   /$$  \ $$",
+        "| $$$$$$$/|  $$$$$$/| $$  | $$| $$ \  $$ /$$$$$$|  $$$$$$/",
+        "|_______/  \______/ |__/  |__/|__/  \__/|______/ \______/ ",
+        "",
+        "        F U C K E R   —   C H E A T   C L I E N T   D E T E C T O R"
+    )
 
-"@
-    Write-Host $b -ForegroundColor Red
-    Write-Host ("  " + ("─" * 95)) -ForegroundColor DarkGray
+    foreach ($line in $lines) {
+        Write-Host ("    " + $line) -ForegroundColor $C.Banner
+    }
+
+    Write-Host ""
+    Write-Rule -Color $C.Dim
+    Write-Host ("  {0,-40} {1,40}" -f "  discord: cheese_cat0  |  discord: mecz.exe", "Special thanks to Nic") -ForegroundColor $C.Dim
+    Write-Rule -Color $C.Dim
     Write-Host ""
 }
 
-# ── Signatures ────────────────────────────────────────────────
-$signatureDefs = @(
-    @{ P = "FINDING_SPAWNER";           E = $false }
-    @{ P = "OPENING_SPAWNER";           E = $false }
-    @{ P = "WAITING_SPAWNER_GUI";       E = $false }
-    @{ P = "LOOTING_BONES";             E = $false }
-    @{ P = "CLOSING_SPAWNER";           E = $false }
-    @{ P = "ORDER_COMMAND";             E = $false }
-    @{ P = "WAIT_ORDER_GUI";            E = $false }
-    @{ P = "SELECT_ORDER_ITEM";         E = $false }
-    @{ P = "WAIT_DELIVERY_GUI";         E = $false }
-    @{ P = "DELIVERING_BONES";          E = $false }
-    @{ P = "WAIT_AFTER_DELIVERY_1";     E = $false }
-    @{ P = "CLOSING_DELIVERY";          E = $false }
-    @{ P = "WAIT_AFTER_CLOSE_DELIVERY"; E = $false }
-    @{ P = "WAIT_CONFIRM_GUI";          E = $false }
-    @{ P = "WAIT_CONFIRM_SETTLE";       E = $false }
-    @{ P = "CLICK_CONFIRM_SLOT";        E = $false }
-    @{ P = "WAIT_AFTER_CONFIRM_1";      E = $false }
-    @{ P = "WAIT_AFTER_CONFIRM_2";      E = $false }
-    @{ P = "WAIT_AFTER_CONFIRM_3";      E = $false }
-    @{ P = "DOUBLE_ESCAPE";             E = $false }
-    @{ P = "DOUBLE_RIGHTCLICK_FIRST";   E = $false }
-    @{ P = "DOUBLE_RIGHTCLICK_SECOND";  E = $false }
-    @{ P = "POST_CYCLE_DELAY";          E = $false }
-    @{ P = "mace_swap";                 E = $true  }
-    @{ P = "quick_strike";              E = $true  }
-    @{ P = "loot_yeeter";               E = $true  }
-    @{ P = "auto_jump_reset";           E = $true  }
-    @{ P = "macro_198";                 E = $true  }
-    @{ P = "stun_slam";                 E = $true  }
-    @{ P = "safe_anchor";               E = $true  }
-    @{ P = "double_anchor";             E = $true  }
-    @{ P = "auto_pot_refill";           E = $true  }
-    @{ P = "totem_offhand";             E = $true  }
-    @{ P = "walksy_optimizer";          E = $true  }
-    @{ P = "key_pearl";                 E = $true  }
-    @{ P = "aim_assist";                E = $true  }
-    @{ P = "auto_neth_pot";             E = $true  }
-    @{ P = "auto_dtap";                 E = $true  }
-    @{ P = "bottle_throw";              E = $true  }
-    @{ P = "trigger_bot";               E = $true  }
-    @{ P = "nametags";                  E = $true  }
-    @{ P = "auto_web";                  E = $true  }
-    @{ P = "SHOP_END";                  E = $false }
-    @{ P = "SHOP_ITEM";                 E = $false }
-    @{ P = "SHOP_GLASS_PANE";           E = $false }
-    @{ P = "SHOP_BUY";                  E = $false }
-    @{ P = "SHOP_CONFIRM";              E = $false }
-    @{ P = "SHOP_CHECK_FULL";           E = $false }
-    @{ P = "SHOP_EXIT";                 E = $false }
-    @{ P = "TARGET_ORDERS";             E = $false }
-    @{ P = "ORDERS_SELECT";             E = $false }
-    @{ P = "ORDERS_EXIT";               E = $false }
-    @{ P = "ORDERS_CONFIRM";            E = $false }
-    @{ P = "ORDERS_FINAL_EXIT";         E = $false }
-    @{ P = "CYCLE_PAUSE";               E = $false }
-    @{ P = "PLACE_OBI";                 E = $false }
-    @{ P = "WAIT_OBI";                  E = $false }
-    @{ P = "PLACE_CRYSTAL";             E = $false }
-    @{ P = "BREAK_CRYSTAL";             E = $false }
-    @{ P = "ROTATING_DOWN";             E = $false }
-    @{ P = "THROWING";                  E = $true  }
-    @{ P = "ROTATING_BACK";             E = $false }
-    @{ P = "REFILLING";                 E = $true  }
-    @{ P = "PLANTING";                  E = $true  }
-    @{ P = "BONEMEALING";               E = $false }
-    @{ P = "MINING";                    E = $true  }
-    @{ P = "ParseJ.a";                  E = $false }
-    @{ P = "CacheE.MISC";               E = $false }
-    @{ P = "CacheE.RENDER";             E = $false }
-    @{ P = "CacheE.CT";                 E = $false }
-    @{ P = "CheckC";                    E = $true  }
-    @{ P = "CoreH";                     E = $true  }
-    @{ P = 'cn$MacroState';             E = $false }
-    @{ P = 'co$State';                  E = $false }
+# ── Signature list ───────────────────────────────────────────
+$signatures = @(
+    "FINDING_SPAWNER","OPENING_SPAWNER","WAITING_SPAWNER_GUI","LOOTING_BONES",
+    "CLOSING_SPAWNER","ORDER_COMMAND","WAIT_ORDER_GUI","SELECT_ORDER_ITEM",
+    "WAIT_DELIVERY_GUI","DELIVERING_BONES","WAIT_AFTER_DELIVERY_1",
+    "CLOSING_DELIVERY","WAIT_AFTER_CLOSE_DELIVERY","WAIT_CONFIRM_GUI",
+    "WAIT_CONFIRM_SETTLE","CLICK_CONFIRM_SLOT","WAIT_AFTER_CONFIRM_1",
+    "WAIT_AFTER_CONFIRM_2","WAIT_AFTER_CONFIRM_3","DOUBLE_ESCAPE",
+    "DOUBLE_RIGHTCLICK_FIRST","DOUBLE_RIGHTCLICK_SECOND","POST_CYCLE_DELAY",
+    "mace_swap","quick_strike","loot_yeeter","auto_jump_reset","macro_198",
+    "stun_slam","safe_anchor","double_anchor","auto_pot_refill","totem_offhand",
+    "walksy_optimizer","key_pearl","aim_assist","auto_neth_pot","auto_dtap",
+    "bottle_throw","trigger_bot","nametags","auto_web",
+    "SHOP_END","SHOP_ITEM","SHOP_GLASS_PANE","SHOP_BUY",
+    "SHOP_CONFIRM","SHOP_CHECK_FULL","SHOP_EXIT",
+    "TARGET_ORDERS","ORDERS_SELECT","ORDERS_EXIT","ORDERS_CONFIRM","ORDERS_FINAL_EXIT",
+    "CYCLE_PAUSE","PLACE_OBI","WAIT_OBI","PLACE_CRYSTAL","BREAK_CRYSTAL",
+    "ROTATING_DOWN","THROWING","ROTATING_BACK","REFILLING",
+    "PLANTING","BONEMEALING","MINING",
+    "ParseJ.a","CacheE.MISC","CacheE.RENDER","CacheE.CT",
+    "CheckC","CoreH","cn`$MacroState","co`$State"
 )
 
-# Pre-compile all regexes once so we don't recompile per-string
-$compiledSigs = foreach ($def in $signatureDefs) {
-    $escaped = [regex]::Escape($def.P)
-    $pattern = if ($def.E) { "(?-i)(^|[^a-zA-Z0-9_\$])$escaped([^a-zA-Z0-9_\$]|$)" } else { "(?-i)$escaped" }
-    [PSCustomObject]@{
-        Name    = $def.P
-        Regex   = [regex]::new($pattern)
-    }
-}
-
-# ── Extract printable ASCII strings from raw bytes ────────────
-function Get-Strings ([byte[]]$bytes) {
-    $list = [System.Collections.Generic.List[string]]::new()
-    $sb   = [System.Text.StringBuilder]::new(128)
+# ── String extractor ─────────────────────────────────────────
+function Get-StringsFromBytes {
+    param([byte[]]$bytes)
+    $results = [System.Collections.Generic.List[string]]::new()
+    $current = [System.Text.StringBuilder]::new()
     foreach ($b in $bytes) {
-        if ($b -ge 32 -and $b -le 126) {
-            [void]$sb.Append([char]$b)
+        if ($b -ge 0x20 -and $b -le 0x7E) {
+            [void]$current.Append([char]$b)
         } else {
-            if ($sb.Length -ge 4) { [void]$list.Add($sb.ToString()) }
-            [void]$sb.Clear()
+            if ($current.Length -ge 4) { [void]$results.Add($current.ToString()) }
+            [void]$current.Clear()
         }
     }
-    if ($sb.Length -ge 4) { [void]$list.Add($sb.ToString()) }
-    return $list
+    if ($current.Length -ge 4) { [void]$results.Add($current.ToString()) }
+    return $results
 }
 
-# ── Scan one jar ──────────────────────────────────────────────
-function Invoke-ScanJar ([string]$path) {
+# ── Jar scanner ──────────────────────────────────────────────
+function Invoke-ScanJar {
+    param([string]$jarPath)
     $hits = [System.Collections.Generic.List[PSCustomObject]]::new()
 
     try {
-        $archive = [System.IO.Compression.ZipFile]::OpenRead($path)
-    } catch {
-        return $null
-    }
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($jarPath)
 
-    try {
         foreach ($entry in $archive.Entries) {
             if ($entry.FullName -notmatch '\.(class|json|txt|cfg|properties|yml|yaml|toml)$') { continue }
 
             try {
-                $es = $entry.Open()
+                $entryStream = $entry.Open()
                 $ms = [System.IO.MemoryStream]::new()
-                $es.CopyTo($ms)
-                $es.Dispose()
-                $strings = Get-Strings $ms.ToArray()
+                $entryStream.CopyTo($ms)
+                $entryStream.Dispose()
+                $entryBytes   = $ms.ToArray()
                 $ms.Dispose()
-            } catch {
-                continue
-            }
+                $entryStrings = Get-StringsFromBytes -bytes $entryBytes
 
-            # Track which sigs already hit this entry (HashSet = O(1))
-            $hitSigsThisEntry = [System.Collections.Generic.HashSet[string]]::new()
-
-            foreach ($sig in $compiledSigs) {
-                if ($hitSigsThisEntry.Contains($sig.Name)) { continue }
-                foreach ($s in $strings) {
-                    if ($sig.Regex.IsMatch($s)) {
-                        [void]$hits.Add([PSCustomObject]@{ Signature = $sig.Name; Entry = $entry.FullName })
-                        [void]$hitSigsThisEntry.Add($sig.Name)
-                        break
+                foreach ($sig in $signatures) {
+                    $pattern = [regex]::Escape($sig)
+                    foreach ($str in $entryStrings) {
+                        if ($str -match $pattern) {
+                            [void]$hits.Add([PSCustomObject]@{ Signature = $sig; Entry = $entry.FullName })
+                            break
+                        }
                     }
                 }
-            }
+            } catch { }
         }
-    } finally {
+
         $archive.Dispose()
+    } catch {
+        Write-Host "  [!] Could not read: $(Split-Path $jarPath -Leaf)" -ForegroundColor $C.Warn
+        return $null
     }
 
     return $hits
 }
 
+# ── Progress bar ─────────────────────────────────────────────
+function Write-Progress-Bar {
+    param([int]$Current, [int]$Total, [string]$Label)
+    $pct    = [math]::Floor(($Current / $Total) * 100)
+    $filled = [math]::Floor($pct / 2)
+    $empty  = 50 - $filled
+    $bar    = ([string][char]0x2588 * $filled) + ([string][char]0x2591 * $empty)
+    $name   = $Label.PadRight(38).Substring(0, [math]::Min(38, $Label.Length))
+    [Console]::Write("  [{0}] {1,3}%  {2}`r" -f $bar, $pct, $name)
+}
+
 # ════════════════════════════════════════════════════════════
-#  MAIN
+#   MAIN
 # ════════════════════════════════════════════════════════════
 Write-Banner
 
-Write-Host "  Enter the folder path to scan (drag & drop works):" -ForegroundColor Cyan
-Write-Host "  > " -ForegroundColor White -NoNewline
+Write-Host "  Enter the folder path to scan (drag & drop works):" -ForegroundColor $C.Accent
+Write-Host "  > " -ForegroundColor $C.White -NoNewline
 $scanPath = (Read-Host).Trim().Trim('"')
 
+Write-Host ""
+
 if (-not (Test-Path $scanPath -PathType Container)) {
-    Write-Host ""
-    Write-Host "  [ERROR] Path not found: $scanPath" -ForegroundColor Red
+    Write-Host "  [ERROR] Path not found or not a directory:" -ForegroundColor $C.Bad
+    Write-Host "          $scanPath" -ForegroundColor $C.BadDim
     Write-Host ""
     Read-Host "  Press Enter to exit"
     exit 1
 }
 
-$jars = @(Get-ChildItem -Path $scanPath -Recurse -Filter "*.jar" -ErrorAction SilentlyContinue)
+$jars = Get-ChildItem -Path $scanPath -Recurse -Filter "*.jar" -ErrorAction SilentlyContinue
 
 if ($jars.Count -eq 0) {
-    Write-Host ""
-    Write-Host "  [!] No .jar files found in: $scanPath" -ForegroundColor Yellow
+    Write-Host "  [!] No .jar files found in:" -ForegroundColor $C.Warn
+    Write-Host "      $scanPath" -ForegroundColor $C.Dim
     Write-Host ""
     Read-Host "  Press Enter to exit"
     exit 0
 }
 
-Write-Host ""
-Write-Host "  Found $($jars.Count) jar(s). Scanning..." -ForegroundColor Green
-Write-Host ("  " + ("─" * 95)) -ForegroundColor DarkGray
+Write-Host "  [+] Found $($jars.Count) jar(s) — starting scan..." -ForegroundColor $C.OK
 Write-Host ""
 
-$allResults = [ordered]@{}
-$skipped    = 0
-$i          = 0
+$totalFlagged = 0
+$totalClean   = 0
+$totalErrors  = 0
+$flaggedMods  = [System.Collections.Generic.List[PSCustomObject]]::new()
+$i = 0
 
 foreach ($jar in $jars) {
     $i++
-    $hits = Invoke-ScanJar -path $jar.FullName
+    Write-Progress-Bar -Current $i -Total $jars.Count -Label $jar.Name
+
+    $hits = Invoke-ScanJar -jarPath $jar.FullName
 
     if ($null -eq $hits) {
-        Write-Host "  [$i/$($jars.Count)]  $($jar.Name)  ->  UNREADABLE" -ForegroundColor DarkYellow
-        $skipped++
-    } elseif ($hits.Count -gt 0) {
-        Write-Host "  [$i/$($jars.Count)]  $($jar.Name)  ->  HIT ($($hits.Count))" -ForegroundColor Red
-        $allResults[$jar.FullName] = $hits
+        $totalErrors++
+        continue
+    }
+
+    if ($hits.Count -gt 0) {
+        $totalFlagged++
+        $flaggedMods.Add([PSCustomObject]@{
+            Name     = $jar.Name
+            Path     = $jar.FullName
+            HitCount = $hits.Count
+            Hits     = $hits
+        })
     } else {
-        Write-Host "  [$i/$($jars.Count)]  $($jar.Name)  ->  clean" -ForegroundColor DarkGreen
+        $totalClean++
     }
 }
 
-# ── Print all results after scan ──────────────────────────────
+# clear progress line
+[Console]::Write(" " * 100 + "`r")
+
+# ── Summary ──────────────────────────────────────────────────
 Write-Host ""
-Write-Host ("  " + ("═" * 95)) -ForegroundColor DarkGray
-Write-Host "  RESULTS" -ForegroundColor Cyan
-Write-Host ("  " + ("═" * 95)) -ForegroundColor DarkGray
+Write-Section -Title "  SCAN COMPLETE  [$( Get-Date -Format 'yyyy-MM-dd HH:mm:ss' )]" -Color $C.Accent
 Write-Host ""
 
-if ($allResults.Count -eq 0) {
-    Write-Host "  [OK] No Dqrkis signatures detected." -ForegroundColor Green
-} else {
-    foreach ($jarPath in $allResults.Keys) {
-        $hits    = $allResults[$jarPath]
-        $jarName = Split-Path $jarPath -Leaf
+$flagColor = if ($totalFlagged -gt 0) { $C.Bad } else { $C.OK }
 
-        Write-Host "  ╔══ DETECTED: $jarName" -ForegroundColor Red
-        Write-Host "  ║   Path     : $jarPath" -ForegroundColor DarkRed
-        Write-Host "  ║   Matches  : $($hits.Count) signature(s)" -ForegroundColor DarkRed
-        Write-Host "  ╠══ Matched Strings:" -ForegroundColor Red
+Write-Host ("  {0,-20} {1}" -f "Jars scanned",  $jars.Count)       -ForegroundColor $C.White
+Write-Host ("  {0,-20} {1}" -f "Clean",          $totalClean)       -ForegroundColor $C.OK
+Write-Host ("  {0,-20} {1}" -f "Errors",         $totalErrors)      -ForegroundColor $C.Warn
+Write-Host ("  {0,-20} {1}" -f "Flagged",        $totalFlagged)     -ForegroundColor $flagColor
 
-        $grouped = $hits | Group-Object -Property Entry
-        foreach ($grp in $grouped) {
-            Write-Host "  ║" -ForegroundColor Red
-            Write-Host "  ║   [File]  $($grp.Name)" -ForegroundColor DarkYellow
-            foreach ($h in $grp.Group) {
-                Write-Host "  ║     [-]  $($h.Signature)" -ForegroundColor Yellow
+Write-Host ""
+
+# ── Flagged detail ───────────────────────────────────────────
+if ($flaggedMods.Count -gt 0) {
+
+    Write-Section -Title "  DETECTED JARS  —  $($flaggedMods.Count) file(s) matched Dqrkis signatures" -Color $C.Bad
+    Write-Host ""
+
+    foreach ($mod in $flaggedMods) {
+        Write-Host "  $([char]0x250C)$([string][char]0x2500 * 2) DETECTED " -ForegroundColor $C.Bad -NoNewline
+        Write-Host $mod.Name                                                 -ForegroundColor $C.White
+        Write-Host "  $([char]0x2502)  Path    : $($mod.Path)"              -ForegroundColor $C.BadDim
+        Write-Host "  $([char]0x2502)  Matches : $($mod.HitCount) signature(s)" -ForegroundColor $C.BadDim
+        Write-Host "  $([char]0x251C)$([string][char]0x2500 * 2) Matched Strings:" -ForegroundColor $C.Bad
+
+        $grouped = $mod.Hits | Group-Object -Property Entry
+        foreach ($group in $grouped) {
+            Write-Host "  $([char]0x2502)" -ForegroundColor $C.Bad
+            Write-Host "  $([char]0x2502)  $([char]0x25B8) $($group.Name)" -ForegroundColor $C.Warn
+            foreach ($h in $group.Group) {
+                Write-Host "  $([char]0x2502)      $([char]0x2022) $($h.Signature)" -ForegroundColor $C.Hit
             }
         }
-        Write-Host "  ╚══" -ForegroundColor Red
+
+        Write-Host "  $([char]0x2514)$([string][char]0x2500 * 60)" -ForegroundColor $C.Bad
         Write-Host ""
     }
+
+    Write-Host "  [!] Review flagged jars above — Dqrkis signatures found." -ForegroundColor $C.Bad
+
+} else {
+    Write-Host "  [OK] No Dqrkis signatures detected in any scanned jar." -ForegroundColor $C.OK
 }
 
-# ── Summary ───────────────────────────────────────────────────
-Write-Host ("  " + ("─" * 95)) -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "  Jars scanned  : $($jars.Count)" -ForegroundColor White
-Write-Host "  Flagged       : $($allResults.Count)" -ForegroundColor $(if ($allResults.Count -gt 0) {"Red"} else {"Green"})
-Write-Host "  Clean         : $($jars.Count - $allResults.Count - $skipped)" -ForegroundColor Green
-if ($skipped -gt 0) {
-    Write-Host "  Skipped       : $skipped  (unreadable)" -ForegroundColor DarkYellow
-}
-Write-Host ""
-Write-Host ("  " + ("─" * 95)) -ForegroundColor DarkGray
-Write-Host "  discord: cheese_cat0   |   discord: mecz.exe   |   Special thanks to Nic" -ForegroundColor DarkGray
-Write-Host ("  " + ("─" * 95)) -ForegroundColor DarkGray
+Write-Rule -Color $C.Dim
+Write-Host "  discord: cheese_cat0   |   discord: mecz.exe   |   Special thanks to Nic" -ForegroundColor $C.Dim
+Write-Rule -Color $C.Dim
 Write-Host ""
 Read-Host "  Press Enter to exit"
