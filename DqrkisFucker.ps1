@@ -19,14 +19,14 @@ $DY = [System.ConsoleColor]::DarkYellow
 $CY = [System.ConsoleColor]::Cyan
 
 # ── Helpers ───────────────────────────────────────────────────
-function Dim  { Write-Host ("  " + ([string][char]0x2500 * 86)) -ForegroundColor $DG }
 function Gap  { Write-Host "" }
+function Rule { Write-Host ("  " + "-" * 80) -ForegroundColor $DG }
 
 function Section {
     param([string]$Title, [System.ConsoleColor]$C = $R)
     Gap
     Write-Host "  $Title" -ForegroundColor $C
-    Dim
+    Rule
 }
 
 function KV {
@@ -34,40 +34,33 @@ function KV {
           [System.ConsoleColor]$KC = $DG,
           [System.ConsoleColor]$VC = $WH)
     Write-Host "    $K" -ForegroundColor $KC -NoNewline
-    Write-Host $V       -ForegroundColor $VC
+    Write-Host $V -ForegroundColor $VC
 }
 
 function Write-ScanLine {
     param([int]$Done, [int]$Total, [string]$Name)
     $pct    = [math]::Floor($Done / $Total * 100)
     $filled = [math]::Floor($pct / 2)
-    $bar    = ([string][char]0x2588 * $filled) + ([string][char]0x2591 * (50 - $filled))
+    $empty  = 50 - $filled
+    $bar    = ("#" * $filled) + ("." * $empty)
     $lbl    = if ($Name.Length -gt 30) { $Name.Substring(0,27) + "..." } else { $Name.PadRight(30) }
     $pctStr = $pct.ToString().PadLeft(3)
-    [Console]::Write("  " + $bar + "  " + $pctStr + "%  " + $lbl + "`r")
+    [Console]::Write("  [" + $bar + "]  " + $pctStr + "%  " + $lbl + "`r")
 }
 
 # ── Banner ────────────────────────────────────────────────────
 function Write-Banner {
     Clear-Host
     Gap
-    $art = @(
-        "  ██████╗  ██████╗ ██████╗ ██╗  ██╗██╗███████╗    ███████╗██╗   ██╗ ██████╗██╗  ██╗███████╗██████╗",
-        "  ██╔══██╗██╔═══██╗██╔══██╗██║ ██╔╝██║██╔════╝    ██╔════╝██║   ██║██╔════╝██║ ██╔╝██╔════╝██╔══██╗",
-        "  ██║  ██║██║   ██║██████╔╝█████╔╝ ██║███████╗    █████╗  ██║   ██║██║     █████╔╝ █████╗  ██████╔╝",
-        "  ██║  ██║██║▄▄ ██║██╔══██╗██╔═██╗ ██║╚════██║    ██╔══╝  ██║   ██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗",
-        "  ██████╔╝╚██████╔╝██║  ██║██║  ██╗██║███████║    ██║     ╚██████╔╝╚██████╗██║  ██╗███████╗██║  ██║",
-        "  ╚═════╝  ╚══▀▀═╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝      ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝"
-    )
-    $colors = $R, $R, $DR, $DR, $DR, $R
-    for ($n = 0; $n -lt $art.Length; $n++) {
-        Write-Host $art[$n] -ForegroundColor $colors[$n]
-    }
+    # Clean big-text banner, zero box-drawing characters
+    Write-Host "  ____  __  ___  ____  _  _  __  ___     ____  _  _   ___  _  _  ____  ____" -ForegroundColor $R
+    Write-Host " (  _ \(  )/ __)(  _ \( )/ )(_  )/ __)   ( ___)( )( ) / __)( )/ )( ___)(  _ \" -ForegroundColor $R
+    Write-Host "  )(_) ))(__\__ \ )   / )  (  / /\__ \    )__)  )()(  ( (__  )  (  )__)  )   /" -ForegroundColor $DR
+    Write-Host " (____/(____)(___/(_)\_)(_)\_)(___)(___/   (__)  \__/   \___)(_)\_)(____)(_)\_)" -ForegroundColor $DR
     Gap
-    Dim
-    Write-Host "  CHEAT CLIENT DETECTOR" -ForegroundColor $DR -NoNewline
-    Write-Host "    discord: cheese_cat0  ·  mecz.exe  ·  thanks Nic" -ForegroundColor $DG
-    Dim
+    Rule
+
+    Rule
     Gap
 }
 
@@ -142,7 +135,7 @@ function Invoke-ScanJar {
 # ══════════════════════════════════════════════════════════════
 Write-Banner
 
-Write-Host "  Scan path " -ForegroundColor $DG -NoNewline
+Write-Host "  scan path " -ForegroundColor $DG -NoNewline
 Write-Host "(leave blank for .minecraft/mods)" -ForegroundColor $DG
 Gap
 Write-Host "  > " -ForegroundColor $R -NoNewline
@@ -153,7 +146,7 @@ if ([string]::IsNullOrWhiteSpace($scanPath)) {
 
 if (-not (Test-Path $scanPath -PathType Container)) {
     Gap
-    Write-Host "  error  " -ForegroundColor $R -NoNewline
+    Write-Host "  error   " -ForegroundColor $R -NoNewline
     Write-Host "path not found: $scanPath" -ForegroundColor $DG
     Gap
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown"); exit 1
@@ -162,8 +155,8 @@ if (-not (Test-Path $scanPath -PathType Container)) {
 $jars = Get-ChildItem -Path $scanPath -Recurse -Filter "*.jar" -ErrorAction SilentlyContinue
 if ($jars.Count -eq 0) {
     Gap
-    Write-Host "  no .jar files found in " -ForegroundColor $DY -NoNewline
-    Write-Host $scanPath -ForegroundColor $DG
+    Write-Host "  warn    " -ForegroundColor $DY -NoNewline
+    Write-Host "no .jar files found in $scanPath" -ForegroundColor $DG
     Gap
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown"); exit 0
 }
@@ -171,9 +164,9 @@ if ($jars.Count -eq 0) {
 $ts        = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $totalSize = [math]::Round(($jars | Measure-Object -Property Length -Sum).Sum / 1MB, 2)
 
-Section "SCAN  ·  $ts"
+Section "SCAN  /  $ts"
 KV "path         " $scanPath $DG $GR
-KV "files        " "$($jars.Count) jar(s)  ·  $totalSize MB"
+KV "files        " "$($jars.Count) jar(s)  /  $totalSize MB"
 KV "signatures   " "$($signatures.Count) loaded"
 Gap
 
@@ -199,9 +192,9 @@ foreach ($jar in $jars) {
     } else { $totalClean++ }
 }
 
-$doneBar = [string][char]0x2588 * 50
+$doneBar = "[" + ("#" * 50) + "]"
 [Console]::Write("  " + $doneBar + "  100%  done" + (" " * 35) + "`r")
-Write-Host ("  " + $doneBar + "  100%") -ForegroundColor $GN
+Write-Host ("  " + $doneBar + "  100%  done") -ForegroundColor $GN
 Start-Sleep -Milliseconds 150
 Clear-Host
 
@@ -212,9 +205,9 @@ Write-Banner
 
 $flagColor = if ($totalFlagged -gt 0) { $R } else { $GN }
 
-Section "RESULTS  ·  $ts"
+Section "RESULTS  /  $ts"
 KV "path         " $scanPath $DG $GR
-KV "scanned      " "$($jars.Count) file(s)  ·  $totalSize MB"
+KV "scanned      " "$($jars.Count) file(s)  /  $totalSize MB"
 KV "signatures   " "$($signatures.Count) in database"
 Gap
 KV "clean        " "$totalClean"   $DG $GN
@@ -225,7 +218,7 @@ Gap
 # ── Detections ────────────────────────────────────────────────
 if ($flaggedMods.Count -gt 0) {
 
-    Section "DETECTIONS  ·  $($flaggedMods.Count) file(s) matched" $R
+    Section "DETECTIONS  /  $($flaggedMods.Count) file(s) matched" $R
 
     $idx = 0
     foreach ($mod in $flaggedMods) {
@@ -233,38 +226,29 @@ if ($flaggedMods.Count -gt 0) {
         Gap
         Write-Host "  [$idx]  " -ForegroundColor $DG -NoNewline
         Write-Host $mod.Name -ForegroundColor $WH
-        KV "  path    " $mod.Path $DG $GR
-        KV "  size    " "$($mod.Size) KB"
-        KV "  hits    " "$($mod.HitCount) signature(s)" $DG $R
+        KV "  path     " $mod.Path $DG $GR
+        KV "  size     " "$($mod.Size) KB"
+        KV "  matches  " "$($mod.HitCount) signature(s)" $DG $R
         Gap
 
         $grouped = $mod.Hits | Group-Object -Property Entry | Sort-Object Name
         foreach ($group in $grouped) {
-            $isCls  = $group.Name -match '\.class$'
-            $tagClr = if ($isCls) { $CY } else { [System.ConsoleColor]::Magenta }
-            $tag    = if ($isCls) { "cls" } else { "res" }
-
-            Write-Host "    $tag  " -ForegroundColor $tagClr -NoNewline
-            $entry = $group.Name
-            if ($entry.Length -gt 70) { $entry = "..." + $entry.Substring($entry.Length - 67) }
-            Write-Host $entry -ForegroundColor $DG
-
             foreach ($h in $group.Group) {
-                Write-Host "         " -NoNewline
+                Write-Host "    " -NoNewline
                 Write-Host $h.Signature -ForegroundColor $YL
             }
         }
 
         if ($idx -lt $flaggedMods.Count) {
             Gap
-            Write-Host ("  " + ([string][char]0x2500 * 50)) -ForegroundColor $DG
+            Write-Host ("  " + ("-" * 50)) -ForegroundColor $DG
         }
     }
 
     Gap
-    Dim
+    Rule
     Write-Host "  verdict  " -ForegroundColor $R -NoNewline
-    Write-Host "Dqrkis signatures confirmed. Review the files above." -ForegroundColor $GR
+    Write-Host "dqrkis fucked" -ForegroundColor $R
 
 } else {
     Write-Host "  all clear  " -ForegroundColor $GN -NoNewline
@@ -273,9 +257,9 @@ if ($flaggedMods.Count -gt 0) {
 
 # ── Footer ────────────────────────────────────────────────────
 Gap
-Dim
-Write-Host "  discord: cheese_cat0  ·  discord: mecz.exe  ·  Special thanks to Nic" -ForegroundColor $DG
-Dim
+Rule
+Write-Host "  discord: cheese_cat0  .  discord: mecz.exe  .  Special thanks to Nic" -ForegroundColor $DG
+Rule
 Gap
 Write-Host "  press any key to exit" -ForegroundColor $DG
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
