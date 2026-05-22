@@ -1,31 +1,11 @@
 # ============================================================
 #   DQRKIS FUCKER  -  Cheat Client Detector
-#   Scans .jar files for known Dqrkis client signatures
-# ============================================================
-#   discord : cheese_cat0
-#   discord : mecz.exe
-#   Special thanks to Nic for helping me
+#   discord : cheese_cat0  |  discord : mecz.exe
+#   Special thanks to Nic
 # ============================================================
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-
-$Host.UI.RawUI.WindowTitle = "Dqrkis Fucker - Cheat Scanner"
-
-function Write-Banner {
-    Clear-Host
-    Write-Host ""
-    Write-Host "  ▄▄▄▄▄▄                                   ▄▄▄▄▄▄▄                             " -ForegroundColor Red
-    Write-Host "  ███▀▀██▄             ▄▄     ▀▀          ███▀▀▀▀▀          ▄▄                 " -ForegroundColor Red
-    Write-Host "  ███  ███ ▄████ ████▄ ██ ▄█▀ ██  ▄█▀▀▀   ███▄▄ ██ ██ ▄████ ██ ▄█▀ ▄█▀█▄ ████▄ " -ForegroundColor Red
-    Write-Host "  ███  ███ ██ ██ ██ ▀▀ ████   ██  ▀███▄   ███▀▀ ██ ██ ██    ████   ██▄█▀ ██ ▀▀ " -ForegroundColor DarkRed
-    Write-Host "  ██████▀  ▀████ ██    ██ ▀█▄ ██▄ ▄▄▄█▀   ███   ▀██▀█ ▀████ ██ ▀█▄ ▀█▄▄▄ ██    " -ForegroundColor DarkRed
-    Write-Host "              ██                                                               " -ForegroundColor DarkRed
-    Write-Host "              ▀▀                                                               " -ForegroundColor DarkRed
-    Write-Host ""
-    Write-Host "  [$( Get-Date -Format 'yyyy-MM-dd HH:mm:ss' )]" -ForegroundColor DarkGray
-    Write-Host ("  " + ("-" * 95)) -ForegroundColor DarkGray
-    Write-Host ""
-}
+$Host.UI.RawUI.WindowTitle = "Dqrkis Fucker"
 
 $signatures = @(
     "FINDING_SPAWNER", "OPENING_SPAWNER", "WAITING_SPAWNER_GUI", "LOOTING_BONES",
@@ -38,15 +18,15 @@ $signatures = @(
     "mace_swap", "quick_strike", "loot_yeeter", "auto_jump_reset", "macro_198",
     "stun_slam", "safe_anchor", "double_anchor", "auto_pot_refill", "totem_offhand",
     "walksy_optimizer", "key_pearl", "aim_assist", "auto_neth_pot", "auto_dtap",
-    "bottle_throw", "trigger_bot", "nametags", "auto_web",
+    "bottle_throw", "trigger_bot", "auto_web",
     "SHOP_END", "SHOP_ITEM", "SHOP_GLASS_PANE", "SHOP_BUY",
     "SHOP_CONFIRM", "SHOP_CHECK_FULL", "SHOP_EXIT",
     "TARGET_ORDERS", "ORDERS_SELECT", "ORDERS_EXIT", "ORDERS_CONFIRM", "ORDERS_FINAL_EXIT",
     "CYCLE_PAUSE", "PLACE_OBI", "WAIT_OBI", "PLACE_CRYSTAL", "BREAK_CRYSTAL",
     "ROTATING_DOWN", "THROWING", "ROTATING_BACK", "REFILLING",
-    "PLANTING", "BONEMEALING", "MINING",
+    "PLANTING", "BONEMEALING",
     "ParseJ.a", "CacheE.MISC", "CacheE.RENDER", "CacheE.CT",
-    "CheckC", "CoreH", "cn`$MacroState", "co`$State"
+    "CoreH", "cn`$MacroState", "co`$State"
 )
 
 function Get-StringsFromBytes {
@@ -67,164 +47,239 @@ function Get-StringsFromBytes {
 
 function Invoke-ScanJar {
     param([string]$jarPath)
-
-    $hits    = [System.Collections.Generic.List[PSCustomObject]]::new()
-    $jarName = Split-Path $jarPath -Leaf
-
+    $hits = [System.Collections.Generic.List[PSCustomObject]]::new()
     try {
         $archive = [System.IO.Compression.ZipFile]::OpenRead($jarPath)
-
         foreach ($entry in $archive.Entries) {
             if ($entry.FullName -notmatch '\.(class|json|txt|cfg|properties|yml|yaml|toml)$') { continue }
-
             try {
-                $entryStream = $entry.Open()
-                $ms          = [System.IO.MemoryStream]::new()
-                $entryStream.CopyTo($ms)
-                $entryStream.Dispose()
-
-                $entryBytes   = $ms.ToArray()
-                $ms.Dispose()
-                $entryStrings = Get-StringsFromBytes -bytes $entryBytes
-
+                $es = $entry.Open(); $ms = [System.IO.MemoryStream]::new()
+                $es.CopyTo($ms); $es.Dispose()
+                $bytes   = $ms.ToArray(); $ms.Dispose()
+                $strings = Get-StringsFromBytes -bytes $bytes
                 foreach ($sig in $signatures) {
-                    $pattern = [regex]::Escape($sig)
-                    $matched = $false
-                    foreach ($str in $entryStrings) {
-                        if ($str -match $pattern) {
-                            $matched = $true
+                    $pat = [regex]::Escape($sig)
+                    foreach ($s in $strings) {
+                        if ($s -match $pat) {
+                            [void]$hits.Add([PSCustomObject]@{ Sig = $sig; Entry = $entry.FullName })
                             break
                         }
                     }
-                    if ($matched) {
-                        [void]$hits.Add([PSCustomObject]@{ Signature = $sig; Entry = $entry.FullName })
-                    }
                 }
-            } catch {
-                # skip unreadable entries silently
-            }
+            } catch {}
         }
-
         $archive.Dispose()
-    }
-    catch {
-        Write-Host "  [!] Could not read: $jarName" -ForegroundColor DarkYellow
-        return $null
-    }
-
+    } catch {}
     return $hits
 }
 
-# ── Main ────────────────────────────────────────────────────
-Write-Banner
+function Find-Instances {
+    $instances = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $roaming = $env:APPDATA
+    $local   = $env:LOCALAPPDATA
 
-Write-Host "  Enter the folder path to scan (drag & drop works):" -ForegroundColor Cyan
-Write-Host "  > " -ForegroundColor White -NoNewline
-$scanPath = Read-Host
-$scanPath = $scanPath.Trim().Trim('"')
+    $default = Join-Path $roaming ".minecraft\mods"
+    if (Test-Path $default) {
+        [void]$instances.Add([PSCustomObject]@{ Name = ".minecraft"; Path = $default })
+    }
 
-if (-not (Test-Path $scanPath -PathType Container)) {
-    Write-Host ""
-    Write-Host "  [ERROR] Path not found or not a directory: $scanPath" -ForegroundColor Red
-    Write-Host ""
-    Read-Host "  Press Enter to exit"
-    exit 1
+    $mrBases = @(
+        (Join-Path $roaming "ModrinthApp\profiles"),
+        (Join-Path $roaming "com.modrinth.theseus\profiles")
+    )
+    foreach ($base in $mrBases) {
+        if (Test-Path $base) {
+            $dirs = Get-ChildItem -Path $base -Directory -ErrorAction SilentlyContinue
+            foreach ($d in $dirs) {
+                $mods = Join-Path $d.FullName "mods"
+                if (Test-Path $mods) {
+                    [void]$instances.Add([PSCustomObject]@{ Name = "Modrinth / $($d.Name)"; Path = $mods })
+                }
+            }
+        }
+    }
+
+    $launchers = @(
+        @{ Base = (Join-Path $local  "PrismLauncher\instances");         Label = "Prism";      Sub = "minecraft\mods" },
+        @{ Base = (Join-Path $local  "MultiMC\instances");               Label = "MultiMC";    Sub = "minecraft\mods" },
+        @{ Base = (Join-Path $roaming "curseforge\minecraft\Instances"); Label = "CurseForge"; Sub = "mods"           },
+        @{ Base = (Join-Path $roaming "ATLauncher\instances");           Label = "ATLauncher"; Sub = "mods"           },
+        @{ Base = (Join-Path $roaming "Feather\instances");              Label = "Feather";    Sub = "mods"           }
+    )
+    foreach ($l in $launchers) {
+        if (Test-Path $l.Base) {
+            $dirs = Get-ChildItem -Path $l.Base -Directory -ErrorAction SilentlyContinue
+            foreach ($d in $dirs) {
+                $mods = Join-Path $d.FullName $l.Sub
+                if (Test-Path $mods) {
+                    [void]$instances.Add([PSCustomObject]@{ Name = "$($l.Label) / $($d.Name)"; Path = $mods })
+                }
+            }
+        }
+    }
+
+    return $instances
 }
 
-$jars = Get-ChildItem -Path $scanPath -Recurse -Filter "*.jar" -ErrorAction SilentlyContinue
+function Write-Banner {
+    Clear-Host
+    Write-Host ""
+    Write-Host "  ▄▄▄▄▄▄                                   ▄▄▄▄▄▄▄                             " -ForegroundColor Red
+    Write-Host "  ███▀▀██▄             ▄▄     ▀▀          ███▀▀▀▀▀          ▄▄                 " -ForegroundColor Red
+    Write-Host "  ███  ███ ▄████ ████▄ ██ ▄█▀ ██  ▄█▀▀▀   ███▄▄ ██ ██ ▄████ ██ ▄█▀ ▄█▀█▄ ████▄ " -ForegroundColor Red
+    Write-Host "  ███  ███ ██ ██ ██ ▀▀ ████   ██  ▀███▄   ███▀▀ ██ ██ ██    ████   ██▄█▀ ██ ▀▀ " -ForegroundColor DarkRed
+    Write-Host "  ██████▀  ▀████ ██    ██ ▀█▄ ██▄ ▄▄▄█▀   ███   ▀██▀█ ▀████ ██ ▀█▄ ▀█▄▄▄ ██    " -ForegroundColor DarkRed
+    Write-Host "              ██                                                               " -ForegroundColor DarkRed
+    Write-Host "              ▀▀                                                               " -ForegroundColor DarkRed
+    Write-Host ""
+    Write-Host "  [$( Get-Date -Format 'yyyy-MM-dd HH:mm:ss' )]  v1.0" -ForegroundColor DarkGray
+    Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
+    Write-Host ""
+}
 
-if ($jars.Count -eq 0) {
+# ══════════════════════════════════════════════════════════════
+#   MAIN
+# ══════════════════════════════════════════════════════════════
+Write-Banner
+
+$instances = Find-Instances
+
+if ($instances.Count -eq 0) {
+    Write-Host "  no instances found — enter path manually" -ForegroundColor DarkGray
     Write-Host ""
-    Write-Host "  [!] No .jar files found in: $scanPath" -ForegroundColor Yellow
+    Write-Host "  > " -NoNewline
+    $scanPath = (Read-Host).Trim().Trim('"')
+    if (-not (Test-Path $scanPath -PathType Container)) {
+        Write-Host "  invalid path." -ForegroundColor Red
+        Read-Host "  press enter to exit"
+        exit 1
+    }
+    $instances = @([PSCustomObject]@{ Name = "Custom"; Path = $scanPath })
+}
+
+Write-Host "  instances" -ForegroundColor DarkGray
+foreach ($inst in $instances) {
+    $c = (Get-ChildItem -Path $inst.Path -Filter "*.jar" -ErrorAction SilentlyContinue).Count
+    Write-Host "    · " -NoNewline -ForegroundColor DarkGray
+    Write-Host $inst.Name -NoNewline -ForegroundColor Gray
+    Write-Host "  $c files" -ForegroundColor DarkGray
+}
+Write-Host ""
+Write-Host "  scanning..." -ForegroundColor DarkGray
+Write-Host "  " -NoNewline
+
+$allJars = [System.Collections.Generic.List[PSCustomObject]]::new()
+foreach ($inst in $instances) {
+    $jars = Get-ChildItem -Path $inst.Path -Filter "*.jar" -ErrorAction SilentlyContinue
+    foreach ($jar in $jars) {
+        [void]$allJars.Add([PSCustomObject]@{
+            Name     = $jar.Name
+            Path     = $jar.FullName
+            Size     = [math]::Round($jar.Length / 1KB, 1)
+            Instance = $inst.Name
+        })
+    }
+}
+
+if ($allJars.Count -eq 0) {
     Write-Host ""
-    Read-Host "  Press Enter to exit"
+    Write-Host "  no jars found." -ForegroundColor DarkGray
+    Read-Host "  press enter to exit"
     exit 0
 }
 
-Write-Host ""
-Write-Host "  Found $($jars.Count) jar(s). Starting scan..." -ForegroundColor Green
-Write-Host ("  " + ("-" * 95)) -ForegroundColor DarkGray
-Write-Host ""
-
-$totalFlagged = 0
-$totalClean   = 0
-$totalErrors  = 0
+$totalSize    = [math]::Round(($allJars | Measure-Object -Property Size -Sum).Sum / 1024, 2)
 $flaggedMods  = [System.Collections.Generic.List[PSCustomObject]]::new()
+$totalFlagged = 0; $totalClean = 0; $totalErrors = 0
 $i = 0
 
-foreach ($jar in $jars) {
+foreach ($jar in $allJars) {
     $i++
-    $pct  = [math]::Floor(($i / $jars.Count) * 100)
-    $padN = $jar.Name.PadRight(45).Substring(0, [math]::Min(45, $jar.Name.Length))
-    [Console]::Write("  [$pct%]  $padN`r")
-
-    $hits = Invoke-ScanJar -jarPath $jar.FullName
-
-    if ($null -eq $hits) {
-        $totalErrors++
-        continue
-    }
-
+    $pct = [math]::Floor(($i / $allJars.Count) * 100)
+    [Console]::Write("`r  $pct%")
+    $hits = Invoke-ScanJar -jarPath $jar.Path
+    if ($null -eq $hits) { $totalErrors++; continue }
     if ($hits.Count -gt 0) {
         $totalFlagged++
         $flaggedMods.Add([PSCustomObject]@{
             Name     = $jar.Name
-            Path     = $jar.FullName
-            HitCount = $hits.Count
+            Path     = $jar.Path
+            Size     = $jar.Size
+            Instance = $jar.Instance
             Hits     = $hits
         })
-    } else {
-        $totalClean++
-    }
+    } else { $totalClean++ }
 }
 
-[Console]::Write(("  " * 60 + "`r"))
+[Console]::Write("`r  done" + (" " * 10) + "`r")
+Start-Sleep -Milliseconds 150
 
-# ── Final Report ────────────────────────────────────────────
-Write-Host ("  " + ("-" * 95)) -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  SCAN COMPLETE" -ForegroundColor Cyan
-Write-Host ("  " + ("-" * 95)) -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  Jars scanned  : $($jars.Count)" -ForegroundColor White
-Write-Host "  Clean         : $totalClean" -ForegroundColor Green
-Write-Host "  Errors        : $totalErrors" -ForegroundColor DarkYellow
-Write-Host "  Flagged       : $totalFlagged" -ForegroundColor $(if ($totalFlagged -gt 0) { "Red" } else { "Green" })
-Write-Host ""
+# ══════════════════════════════════════════════════════════════
+#   REPORT
+# ══════════════════════════════════════════════════════════════
+Write-Banner
 
-if ($flaggedMods.Count -gt 0) {
-    Write-Host ("  " + ("-" * 95)) -ForegroundColor Red
+$hasFlagged = $totalFlagged -gt 0
+
+Write-Host "  instances " -NoNewline -ForegroundColor DarkGray
+Write-Host "$($instances.Count)" -ForegroundColor White
+Write-Host "  scanned   " -NoNewline -ForegroundColor DarkGray
+Write-Host "$($allJars.Count) files  ($totalSize MB)" -ForegroundColor White
+Write-Host "  clean     " -NoNewline -ForegroundColor DarkGray
+Write-Host "$totalClean" -ForegroundColor Green
+Write-Host "  errors    " -NoNewline -ForegroundColor DarkGray
+if ($totalErrors -gt 0) { Write-Host "$totalErrors" -ForegroundColor DarkYellow } else { Write-Host "0" -ForegroundColor DarkGray }
+Write-Host "  flagged   " -NoNewline -ForegroundColor DarkGray
+if ($hasFlagged) { Write-Host "$totalFlagged" -ForegroundColor Red } else { Write-Host "0" -ForegroundColor Green }
+
+Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
+
+if ($hasFlagged) {
     Write-Host ""
-    Write-Host "  DETECTED JARS -- $($flaggedMods.Count) file(s) matched Dqrkis signatures" -ForegroundColor Red
-    Write-Host ""
-
+    $idx = 0
     foreach ($mod in $flaggedMods) {
-        Write-Host "  [DETECTED] $($mod.Name)" -ForegroundColor Red
-        Write-Host "  Path     : $($mod.Path)" -ForegroundColor DarkRed
-        Write-Host "  Matches  : $($mod.HitCount) signature(s) found" -ForegroundColor DarkRed
-        Write-Host "  Matched Strings:" -ForegroundColor Red
+        $idx++
+        Write-Host "  [$idx]" -ForegroundColor Red -NoNewline
+        Write-Host " $($mod.Name)" -ForegroundColor White
 
-        $grouped = $mod.Hits | Group-Object -Property Entry
-        foreach ($group in $grouped) {
-            Write-Host ""
-            Write-Host "    $($group.Name)" -ForegroundColor DarkYellow
-            foreach ($h in $group.Group) {
-                Write-Host "      $($h.Signature)" -ForegroundColor Yellow
+        Write-Host "      instance  " -NoNewline -ForegroundColor DarkGray
+        Write-Host $mod.Instance -ForegroundColor Gray
+
+        Write-Host "      path      " -NoNewline -ForegroundColor DarkGray
+        $dispPath = $mod.Path
+        if ($dispPath.Length -gt 55) { $dispPath = "..." + $dispPath.Substring($dispPath.Length - 52) }
+        Write-Host $dispPath -ForegroundColor Gray
+
+        Write-Host "      size      " -NoNewline -ForegroundColor DarkGray
+        Write-Host "$($mod.Size) KB" -ForegroundColor Gray
+
+        Write-Host "      hits      " -NoNewline -ForegroundColor DarkGray
+        Write-Host "$($mod.Hits.Count)" -ForegroundColor Red
+        Write-Host ""
+
+        $grouped = $mod.Hits | Group-Object -Property Entry | Sort-Object Name
+        foreach ($g in $grouped) {
+            foreach ($h in $g.Group) {
+                Write-Host "      $($h.Sig)" -ForegroundColor Cyan
             }
         }
 
-        Write-Host ""
-        Write-Host ("  " + ("-" * 50)) -ForegroundColor DarkGray
-        Write-Host ""
+        if ($idx -lt $flaggedMods.Count) { Write-Host "" }
     }
 
-    Write-Host "  dqrkis fucked" -ForegroundColor Red
+    Write-Host ""
+    Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
+    Write-Host "  result    " -NoNewline -ForegroundColor DarkGray
+    Write-Host "dqrkis fucked" -ForegroundColor Red
+
 } else {
-    Write-Host "  [OK] No Dqrkis signatures detected in any scanned jar." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  result    " -NoNewline -ForegroundColor DarkGray
+    Write-Host "clean — no dqrkis signatures found" -ForegroundColor Green
 }
 
+Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
 Write-Host ""
-Write-Host ("  " + ("-" * 95)) -ForegroundColor DarkGray
-Write-Host "  discord: cheese_cat0   |   discord: mecz.exe   |   Special thanks to Nic" -ForegroundColor DarkGray
+Write-Host "  discord: cheese_cat0  .  discord: mecz.exe  .  Special thanks to Nic" -ForegroundColor DarkGray
 Write-Host ""
-Read-Host "  Press Enter to exit"
+Read-Host "  press enter to exit"
