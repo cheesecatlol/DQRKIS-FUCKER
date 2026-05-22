@@ -183,7 +183,8 @@ function Write-ScanLine {
     $filled = [math]::Floor($pct / 2)           # 50-char bar
     $bar    = ([string][char]0x2588 * $filled) + ([string][char]0x2591 * (50 - $filled))
     $lbl    = $Name.PadRight(28).Substring(0, [math]::Min(28, $Name.Length))
-    [Console]::Write("  │  {0}  {1,3}%  {2}`r" -f $bar, $pct, $lbl)
+    $pctStr = $pct.ToString().PadLeft(3)
+    [Console]::Write("  " + [char]0x2502 + "  " + $bar + "  " + $pctStr + "%  " + $lbl + "`r")
 }
 
 # ════════════════════════════════════════════════════════════
