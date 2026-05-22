@@ -379,7 +379,7 @@ if ($flaggedMods.Count -gt 0) {
     Write-Host " dqrkis fucked " -ForegroundColor White -BackgroundColor DarkRed
 } else {
     Write-Host "  " -NoNewline
-    Write-Host " No target strings found. Mods look cheesy clean! " -ForegroundColor Black -BackgroundColor DarkGreen
+    Write-Host " No dqrkis found " -ForegroundColor Black -BackgroundColor DarkGreen
 }
 
 Write-Host ""
@@ -392,6 +392,13 @@ Write-Host "  Discord     : " -NoNewline -ForegroundColor DarkGray
 Write-Host "cheese_cat0" -ForegroundColor Yellow
 Write-Host "  GitHub      : " -NoNewline -ForegroundColor DarkGray
 Write-Host "github.com/cheesecatlol" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  Created by  : " -NoNewline -ForegroundColor DarkGray
+Write-Host "nic" -ForegroundColor Yellow
+Write-Host "  Discord     : " -NoNewline -ForegroundColor DarkGray
+Write-Host "mecz.exe" -ForegroundColor Yellow
+Write-Host "  GitHub      : " -NoNewline -ForegroundColor DarkGray
+Write-Host "github.com/Nickk196" -ForegroundColor Yellow
 Write-Host ""
 Write-Host $sumSep -ForegroundColor DarkYellow
 Write-Host ""
