@@ -124,13 +124,13 @@ function Find-Instances {
 function Write-Banner {
     Clear-Host
     Write-Host ""
-    Write-Host "  ▄▄▄▄▄▄                                   ▄▄▄▄▄▄▄                             " -ForegroundColor Red
-    Write-Host "  ███▀▀██▄             ▄▄     ▀▀          ███▀▀▀▀▀          ▄▄                 " -ForegroundColor Red
-    Write-Host "  ███  ███ ▄████ ████▄ ██ ▄█▀ ██  ▄█▀▀▀   ███▄▄ ██ ██ ▄████ ██ ▄█▀ ▄█▀█▄ ████▄ " -ForegroundColor Red
-    Write-Host "  ███  ███ ██ ██ ██ ▀▀ ████   ██  ▀███▄   ███▀▀ ██ ██ ██    ████   ██▄█▀ ██ ▀▀ " -ForegroundColor DarkRed
-    Write-Host "  ██████▀  ▀████ ██    ██ ▀█▄ ██▄ ▄▄▄█▀   ███   ▀██▀█ ▀████ ██ ▀█▄ ▀█▄▄▄ ██    " -ForegroundColor DarkRed
-    Write-Host "              ██                                                                " -ForegroundColor DarkRed
-    Write-Host "              ▀▀                                                                " -ForegroundColor DarkRed
+    Write-Host "▄▄▄▄▄▄                                   ▄▄▄▄▄▄▄                             " -ForegroundColor Red
+    Write-Host "███▀▀██▄             ▄▄     ▀▀          ███▀▀▀▀▀          ▄▄                 " -ForegroundColor Red
+    Write-Host "███  ███ ▄████ ████▄ ██ ▄█▀ ██  ▄█▀▀▀   ███▄▄ ██ ██ ▄████ ██ ▄█▀ ▄█▀█▄ ████▄ " -ForegroundColor Red
+    Write-Host "███  ███ ██ ██ ██ ▀▀ ████   ██  ▀███▄   ███▀▀ ██ ██ ██    ████   ██▄█▀ ██ ▀▀ " -ForegroundColor DarkRed
+    Write-Host "██████▀  ▀████ ██    ██ ▀█▄ ██▄ ▄▄▄█▀   ███   ▀██▀█ ▀████ ██ ▀█▄ ▀█▄▄▄ ██    " -ForegroundColor DarkRed
+    Write-Host "            ██                                                               " -ForegroundColor DarkRed
+    Write-Host "            ▀▀                                                               " -ForegroundColor DarkRed
     Write-Host ""
     Write-Host "  [$( Get-Date -Format 'yyyy-MM-dd HH:mm:ss' )]  v1.0" -ForegroundColor DarkGray
     Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
