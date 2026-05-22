@@ -5,9 +5,9 @@
 # ============================================================
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
- $Host.UI.RawUI.WindowTitle = "Dqrkis Fucker"
+$Host.UI.RawUI.WindowTitle = "Dqrkis Fucker"
 
- $signatures = @(
+$signatures = @(
     "FINDING_SPAWNER", "OPENING_SPAWNER", "WAITING_SPAWNER_GUI", "LOOTING_BONES",
     "CLOSING_SPAWNER", "ORDER_COMMAND", "WAIT_ORDER_GUI", "SELECT_ORDER_ITEM",
     "WAIT_DELIVERY_GUI", "DELIVERING_BONES", "WAIT_AFTER_DELIVERY_1",
@@ -129,8 +129,8 @@ function Write-Banner {
     Write-Host "  ███  ███ ▄████ ████▄ ██ ▄█▀ ██  ▄█▀▀▀   ███▄▄ ██ ██ ▄████ ██ ▄█▀ ▄█▀█▄ ████▄ " -ForegroundColor Red
     Write-Host "  ███  ███ ██ ██ ██ ▀▀ ████   ██  ▀███▄   ███▀▀ ██ ██ ██    ████   ██▄█▀ ██ ▀▀ " -ForegroundColor DarkRed
     Write-Host "  ██████▀  ▀████ ██    ██ ▀█▄ ██▄ ▄▄▄█▀   ███   ▀██▀█ ▀████ ██ ▀█▄ ▀█▄▄▄ ██    " -ForegroundColor DarkRed
-    Write-Host "              ██                                                               " -ForegroundColor DarkRed
-    Write-Host "              ▀▀                                                               " -ForegroundColor DarkRed
+    Write-Host "              ██                                                                " -ForegroundColor DarkRed
+    Write-Host "              ▀▀                                                                " -ForegroundColor DarkRed
     Write-Host ""
     Write-Host "  [$( Get-Date -Format 'yyyy-MM-dd HH:mm:ss' )]  v1.0" -ForegroundColor DarkGray
     Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
@@ -142,7 +142,7 @@ function Write-Banner {
 # ══════════════════════════════════════════════════════════════
 Write-Banner
 
- $instances = Find-Instances
+$instances = Find-Instances
 
 if ($instances.Count -eq 0) {
     Write-Host "  no instances found — enter path manually" -ForegroundColor DarkGray
@@ -168,7 +168,7 @@ Write-Host ""
 Write-Host "  scanning..." -ForegroundColor DarkGray
 Write-Host "  " -NoNewline
 
- $allJars = [System.Collections.Generic.List[PSCustomObject]]::new()
+$allJars = [System.Collections.Generic.List[PSCustomObject]]::new()
 foreach ($inst in $instances) {
     $jars = Get-ChildItem -Path $inst.Path -Filter "*.jar" -ErrorAction SilentlyContinue
     foreach ($jar in $jars) {
@@ -188,10 +188,10 @@ if ($allJars.Count -eq 0) {
     exit 0
 }
 
- $totalSize    = [math]::Round(($allJars | Measure-Object -Property Size -Sum).Sum / 1024, 2)
- $flaggedMods  = [System.Collections.Generic.List[PSCustomObject]]::new()
- $totalFlagged = 0; $totalClean = 0; $totalErrors = 0
- $i = 0
+$totalSize    = [math]::Round(($allJars | Measure-Object -Property Size -Sum).Sum / 1024, 2)
+$flaggedMods  = [System.Collections.Generic.List[PSCustomObject]]::new()
+$totalFlagged = 0; $totalClean = 0; $totalErrors = 0
+$i = 0
 
 foreach ($jar in $allJars) {
     $i++
@@ -219,7 +219,7 @@ Start-Sleep -Milliseconds 150
 # ══════════════════════════════════════════════════════════════
 Write-Banner
 
- $hasFlagged = $totalFlagged -gt 0
+$hasFlagged = $totalFlagged -gt 0
 
 Write-Host "  instances " -NoNewline -ForegroundColor DarkGray
 Write-Host "$($instances.Count)" -ForegroundColor White
@@ -239,24 +239,43 @@ if ($hasFlagged) {
     $idx = 0
     foreach ($mod in $flaggedMods) {
         $idx++
-        Write-Host "  [$idx] $($mod.Name)" -ForegroundColor White
-        Write-Host "      instance  $($mod.Instance)" -ForegroundColor Gray
-        Write-Host "      path      $($mod.Path)" -ForegroundColor Gray
-        Write-Host "      size      $($mod.Size) KB" -ForegroundColor Gray
-        Write-Host "      hits      $($mod.Hits.Count)" -ForegroundColor Red
+        Write-Host "  [$idx]" -ForegroundColor Red -NoNewline
+        Write-Host " $($mod.Name)" -ForegroundColor White
 
-        $uniqueSigs = @($mod.Hits.Sig | Select-Object -Unique)
-        $sigLine = $uniqueSigs -join ", "
-        Write-Host "      strings   $sigLine" -ForegroundColor Cyan
+        Write-Host "      instance  " -NoNewline -ForegroundColor DarkGray
+        Write-Host $mod.Instance -ForegroundColor Gray
+
+        Write-Host "      path      " -NoNewline -ForegroundColor DarkGray
+        $dispPath = $mod.Path
+        if ($dispPath.Length -gt 55) { $dispPath = "..." + $dispPath.Substring($dispPath.Length - 52) }
+        Write-Host $dispPath -ForegroundColor Gray
+
+        Write-Host "      size      " -NoNewline -ForegroundColor DarkGray
+        Write-Host "$($mod.Size) KB" -ForegroundColor Gray
+
+        Write-Host "      hits      " -NoNewline -ForegroundColor DarkGray
+        Write-Host "$($mod.Hits.Count)" -ForegroundColor Red
         Write-Host ""
+
+        $grouped = $mod.Hits | Group-Object -Property Entry | Sort-Object Name
+        foreach ($g in $grouped) {
+            foreach ($h in $g.Group) {
+                Write-Host "      $($h.Sig)" -ForegroundColor Cyan
+            }
+        }
+
+        if ($idx -lt $flaggedMods.Count) { Write-Host "" }
     }
 
+    Write-Host ""
     Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
-    Write-Host "  result    dqrkis fucked" -ForegroundColor Red
+    Write-Host "  result    " -NoNewline -ForegroundColor DarkGray
+    Write-Host "dqrkis fucked" -ForegroundColor Red
 
 } else {
     Write-Host ""
-    Write-Host "  result    clean — no dqrkis signatures found" -ForegroundColor Green
+    Write-Host "  result    " -NoNewline -ForegroundColor DarkGray
+    Write-Host "clean — no dqrkis signatures found" -ForegroundColor Green
 }
 
 Write-Host ("  " + ("-" * 88)) -ForegroundColor DarkGray
