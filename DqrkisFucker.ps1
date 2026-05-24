@@ -138,7 +138,7 @@ $TargetStrings = @(
 
     # Crystal / obi / farming automation
     "PLACE_OBI","WAIT_OBI","PLACE_CRYSTAL","BREAK_CRYSTAL",
-    "ROTATING_DOWN","THROWING","ROTATING_BACK","REFILLING",
+    "ROTATING_DOWN","ROTATING_BACK","REFILLING",
     "PLANTING","BONEMEALING",
 
     # Internal class / obfuscation signatures
@@ -211,7 +211,7 @@ $TargetStringsClean = @(
     "SHOP_CONFIRM","SHOP_CHECK_FULL","SHOP_EXIT",
     "TARGET_ORDERS","ORDERS_SELECT","ORDERS_EXIT","ORDERS_CONFIRM","ORDERS_FINAL_EXIT","CYCLE_PAUSE",
     "PLACE_OBI","WAIT_OBI","PLACE_CRYSTAL","BREAK_CRYSTAL",
-    "ROTATING_DOWN","THROWING","ROTATING_BACK","REFILLING",
+    "ROTATING_DOWN","ROTATING_BACK","REFILLING",
     "PLANTING","BONEMEALING",
     "ParseJ.a","CacheE.MISC","CacheE.RENDER","CacheE.CT",
     "CoreH","cn`$MacroState","co`$State",
@@ -565,7 +565,7 @@ if ($flaggedMods.Count -gt 0) {
     Write-Host " dqrkis fucked " -ForegroundColor White -BackgroundColor DarkRed
 } else {
     Write-Host "  " -NoNewline
-    Write-Host " No dqrkis detected " -ForegroundColor Black -BackgroundColor DarkGreen
+    Write-Host " No dqrkis found " -ForegroundColor Black -BackgroundColor DarkGreen
 }
 
 Write-Host ""
